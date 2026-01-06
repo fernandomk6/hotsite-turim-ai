@@ -9,26 +9,88 @@ function CTA() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
 
-    // Simula envio
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Log dos dados do formulário
+    console.log('=== DADOS DO FORMULÁRIO ===');
+    console.log('Nome:', formData.name);
+    console.log('Email:', formData.email);
+    console.log('Empresa:', formData.company);
+    console.log('Mensagem:', formData.message);
+    console.log('Todos os dados:', formData);
+    console.log('===========================');
 
-    setSubmitted(true);
-    setIsSubmitting(false);
+    try {
+      const url = "https://rte.turimsoft.com.br";
+      
+      const payload = {
+        g_organization_id: "64",
+        data: JSON.stringify({
+          class: "custom_ws",
+          method: "run",
+          custom_class: "turimai_email",
+          custom_method: "send_message",
+          contact: {
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+            message: formData.message
+          },
+          from: "hotsite_turim_ai"
+        })
+      };
 
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', company: '', message: '' });
-    }, 3000);
+      console.log('=== ENVIANDO PAYLOAD ===');
+      console.log('URL:', url);
+      console.log('Payload:', payload);
+      console.log('========================');
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(payload)
+      });
+
+      console.log('=== RESPOSTA ===');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+      
+      const responseData = await response.text();
+      console.log('Response Data:', responseData);
+      console.log('================');
+
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      setSubmitted(true);
+      setIsSubmitting(false);
+
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 3000);
+
+    } catch (err) {
+      console.error('=== ERRO AO ENVIAR ===');
+      console.error('Erro:', err);
+      console.error('======================');
+      
+      setError('Erro ao enviar mensagem. Por favor, tente novamente.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -43,6 +105,17 @@ function CTA() {
             <span className="gradient-text">seus dados em resultados?</span>
           </h2>
           <p>Entre em contato e descubra como o TurimAI pode revolucionar a forma como sua empresa trabalha com dados.</p>
+          {error && (
+            <div className="error-message" style={{ 
+              color: '#ef4444', 
+              marginBottom: '20px', 
+              padding: '10px', 
+              borderRadius: '4px', 
+              backgroundColor: 'rgba(239, 68, 68, 0.1)' 
+            }}>
+              {error}
+            </div>
+          )}
           <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
